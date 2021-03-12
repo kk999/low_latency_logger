@@ -101,38 +101,33 @@ namespace Logger {
 			void main() { while (running) consume(); consume(); }
 			void consume() {
 				for (PrintfInfomation *printfInfo; (printfInfo = core.getAvailableSpaceForConsumer()) != nullptr; ) {
-					int passcnt = 0;
 					logFile << getTime("%H:%M:%S.", std::chrono::system_clock::now()) << " ";
-					for (auto ch: printfInfo->formatting) {
-						if (passcnt > 0) {
-							--passcnt;
-							continue;
-						}
-						if (ch == '%') {
+					for (auto *itr=printfInfo->formatting, *itr_end=printfInfo->formatting+sizeof(PrintfInfomation::formatting); itr < itr_end; ++itr ) {
+						if (*itr == '%') {
 							for (auto &arg: printfInfo->args) {
 								switch (arg.type) {
 									case TypeID::TypeID_init: continue;
-									case TypeID::TypeID_char          : passcnt += sizeof(  "%c")-2; logFile <<               arg.value.c    ; break;
-									case TypeID::TypeID_unsigned_char : passcnt += sizeof("%02x")-2; logFile <<               arg.value.uc   ; break;
-									case TypeID::TypeID_int           : passcnt += sizeof(  "%d")-2; logFile <<               arg.value.i    ; break;
-									case TypeID::TypeID_unsigned_int  : passcnt += sizeof(  "%u")-2; logFile <<               arg.value.ui   ; break;
-									case TypeID::TypeID_long          : passcnt += sizeof( "%ld")-2; logFile <<               arg.value.l    ; break;
-									case TypeID::TypeID_unsigned_long : passcnt += sizeof( "%lu")-2; logFile <<               arg.value.ul   ; break;
-									case TypeID::TypeID_float         : passcnt += sizeof(  "%f")-2; logFile << std::fixed << arg.value.f    ; break;
-									case TypeID::TypeID_double        : passcnt += sizeof( "%lf")-2; logFile << std::fixed << arg.value.d    ; break;
-									case TypeID::TypeID_char_star     : passcnt += sizeof(  "%s")-2; logFile <<               arg.value.s    ; break;
-									case TypeID::TypeID_data          : passcnt += sizeof("%.*s")-2; logFile <<               arg.value.data ; break;
-									case TypeID::TypeID_void_star     : passcnt += sizeof(  "%p")-2; logFile <<               arg.value.p    ; break;
+									case TypeID::TypeID_char          : itr += sizeof(  "%c")-2; logFile <<               arg.value.c    ; break;
+									case TypeID::TypeID_unsigned_char : itr += sizeof("%02x")-2; logFile <<               arg.value.uc   ; break;
+									case TypeID::TypeID_int           : itr += sizeof(  "%d")-2; logFile <<               arg.value.i    ; break;
+									case TypeID::TypeID_unsigned_int  : itr += sizeof(  "%u")-2; logFile <<               arg.value.ui   ; break;
+									case TypeID::TypeID_long          : itr += sizeof( "%ld")-2; logFile <<               arg.value.l    ; break;
+									case TypeID::TypeID_unsigned_long : itr += sizeof( "%lu")-2; logFile <<               arg.value.ul   ; break;
+									case TypeID::TypeID_float         : itr += sizeof(  "%f")-2; logFile << std::fixed << arg.value.f    ; break;
+									case TypeID::TypeID_double        : itr += sizeof( "%lf")-2; logFile << std::fixed << arg.value.d    ; break;
+									case TypeID::TypeID_char_star     : itr += sizeof(  "%s")-2; logFile <<               arg.value.s    ; break;
+									case TypeID::TypeID_data          : itr += sizeof("%.*s")-2; logFile <<               arg.value.data ; break;
+									case TypeID::TypeID_void_star     : itr += sizeof(  "%p")-2; logFile <<               arg.value.p    ; break;
 									default: logFile << "!unknow"; break;
 								}
 								arg.type = TypeID::TypeID_init;
 								break;
 							}
 							continue;
-						} else if (ch == '\0') {
+						} else if (*itr == '\0') {
 							break;
 						}
-						logFile << ch;
+						logFile << *itr;
 					}
 					printfInfo->formatting[0] = '\0';
 				}
