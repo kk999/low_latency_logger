@@ -167,7 +167,8 @@ namespace Logger {
 				PrintfInfomation::ArgumentInfo &arg = printfInfo->args[idxArgument];
 				arg.type = type;
 				arg.length = dataSize;
-				memcpy(arg.value.data, data, arg.length);
+				memcpy(arg.value.data, data, dataSize);
+				arg.value.data[dataSize] = '\0';
 				processParameters<idxArgument+1>(std::forward<Targs>(args)...);
 			}
 			template<int idxArgument=0, typename...Targs, typename T> inline void processParameters(TypeID type, T &&value, Targs&&...args) {
