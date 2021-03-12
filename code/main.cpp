@@ -45,9 +45,13 @@ template<unsigned repeat> class TimeDiff {
 		}
 };
 
-volatile static bool start_case1 = false;
+#include <random>
 template<unsigned repeat> void case1(const int idxThread, const unsigned int times) {
-	while (!start_case1) {}
+	std::random_device rd;
+	std::default_random_engine gen = std::default_random_engine(rd());
+	std::uniform_int_distribution<int> dis(1,10);
+	const unsigned int delay = dis(gen);
+	std::this_thread::sleep_for(std::chrono::milliseconds(delay));
 	TimeDiff<repeat> timediff(times);
 	timediff.stamp();
 	for (int t = 1; t <= repeat; ++t) {
@@ -67,7 +71,7 @@ template<unsigned repeat> void case1(const int idxThread, const unsigned int tim
 		}
 		timediff.stamp();
 	}
-	printf("thread%3d: ", idxThread);
+	printf("thread%3d(%2dms): ", idxThread, delay);
 }
 
 int main(int argc, char **argv) {
@@ -88,7 +92,6 @@ int main(int argc, char **argv) {
 	for (int idxThread = sizeof(threads)/sizeof(*threads); --idxThread >= 0; ) {
 		threads[idxThread] = std::thread(case1<4>, idxThread, times);
 	}
-	start_case1 = true;
 	for (auto &thread: threads) {
 		if (thread.joinable()) {
 			thread.join();
