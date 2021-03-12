@@ -45,12 +45,14 @@ template<unsigned repeat> class TimeDiff {
 		}
 };
 
+#include <functional>
 #include <random>
 template<unsigned repeat> void case1(const int idxThread, const unsigned int times) {
 	std::random_device rd;
 	std::default_random_engine gen = std::default_random_engine(rd());
 	std::uniform_int_distribution<int> dis(1,10);
-	const unsigned int delay = dis(gen);
+	auto randfun = std::bind(dis, gen);
+	const unsigned int delay = randfun();
 	std::this_thread::sleep_for(std::chrono::milliseconds(delay));
 	TimeDiff<repeat> timediff(times);
 	timediff.stamp();
