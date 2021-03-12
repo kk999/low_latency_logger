@@ -112,17 +112,17 @@ namespace Logger {
 							for (auto &arg: printfInfo->args) {
 								switch (arg.type) {
 									case TypeID::TypeID_init: continue;
-									case TypeID::TypeID_char          : { const char fmt[]{   "%c"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.c    ;} break;
-									case TypeID::TypeID_unsigned_char : { const char fmt[]{ "%02x"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.uc   ;} break;
-									case TypeID::TypeID_int           : { const char fmt[]{   "%d"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.i    ;} break;
-									case TypeID::TypeID_unsigned_int  : { const char fmt[]{   "%u"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.ui   ;} break;
-									case TypeID::TypeID_long          : { const char fmt[]{  "%ld"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.l    ;} break;
-									case TypeID::TypeID_unsigned_long : { const char fmt[]{  "%lu"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.ul   ;} break;
-									case TypeID::TypeID_float         : { const char fmt[]{   "%f"}; passcnt += sizeof(fmt)-2; logFile << std::fixed << arg.value.f    ;} break;
-									case TypeID::TypeID_double        : { const char fmt[]{  "%lf"}; passcnt += sizeof(fmt)-2; logFile << std::fixed << arg.value.d    ;} break;
-									case TypeID::TypeID_char_star     : { const char fmt[]{   "%s"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.s    ;} break;
-									case TypeID::TypeID_data          : { const char fmt[]{ "%.*s"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.data ;} break;
-									case TypeID::TypeID_void_star     : { const char fmt[]{   "%p"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.p    ;} break;
+									case TypeID::TypeID_char          : passcnt += sizeof(  "%c")-2; logFile <<               arg.value.c    ; break;
+									case TypeID::TypeID_unsigned_char : passcnt += sizeof("%02x")-2; logFile <<               arg.value.uc   ; break;
+									case TypeID::TypeID_int           : passcnt += sizeof(  "%d")-2; logFile <<               arg.value.i    ; break;
+									case TypeID::TypeID_unsigned_int  : passcnt += sizeof(  "%u")-2; logFile <<               arg.value.ui   ; break;
+									case TypeID::TypeID_long          : passcnt += sizeof( "%ld")-2; logFile <<               arg.value.l    ; break;
+									case TypeID::TypeID_unsigned_long : passcnt += sizeof( "%lu")-2; logFile <<               arg.value.ul   ; break;
+									case TypeID::TypeID_float         : passcnt += sizeof(  "%f")-2; logFile << std::fixed << arg.value.f    ; break;
+									case TypeID::TypeID_double        : passcnt += sizeof( "%lf")-2; logFile << std::fixed << arg.value.d    ; break;
+									case TypeID::TypeID_char_star     : passcnt += sizeof(  "%s")-2; logFile <<               arg.value.s    ; break;
+									case TypeID::TypeID_data          : passcnt += sizeof("%.*s")-2; logFile <<               arg.value.data ; break;
+									case TypeID::TypeID_void_star     : passcnt += sizeof(  "%p")-2; logFile <<               arg.value.p    ; break;
 									default: logFile << "!unknow"; break;
 								}
 								arg.type = TypeID::TypeID_init;
