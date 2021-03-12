@@ -48,7 +48,6 @@ namespace Logger {
 		};
 		char formatting[maxFormatStrLen];
 		struct ArgumentInfo {
-			int length;
 			TypeID type;
 			union Argument {
 				char c;                // TypeID_char
@@ -111,23 +110,22 @@ namespace Logger {
 						}
 						if (ch == '%') {
 							for (auto &arg: printfInfo->args) {
-								if (arg.length == 0) continue;
 								switch (arg.type) {
-									case TypeID::TypeID_init: break;
-									case TypeID::TypeID_char          : { const char fmt[]{   "%c"}; passcnt += sizeof(fmt)-2; assert(arg.length == sizeof(arg.value.c    )); logFile <<               arg.value.c    ;} break;
-									case TypeID::TypeID_unsigned_char : { const char fmt[]{ "%02x"}; passcnt += sizeof(fmt)-2; assert(arg.length == sizeof(arg.value.uc   )); logFile <<               arg.value.uc   ;} break;
-									case TypeID::TypeID_int           : { const char fmt[]{   "%d"}; passcnt += sizeof(fmt)-2; assert(arg.length == sizeof(arg.value.i    )); logFile <<               arg.value.i    ;} break;
-									case TypeID::TypeID_unsigned_int  : { const char fmt[]{   "%u"}; passcnt += sizeof(fmt)-2; assert(arg.length == sizeof(arg.value.ui   )); logFile <<               arg.value.ui   ;} break;
-									case TypeID::TypeID_long          : { const char fmt[]{  "%ld"}; passcnt += sizeof(fmt)-2; assert(arg.length == sizeof(arg.value.l    )); logFile <<               arg.value.l    ;} break;
-									case TypeID::TypeID_unsigned_long : { const char fmt[]{  "%lu"}; passcnt += sizeof(fmt)-2; assert(arg.length == sizeof(arg.value.ul   )); logFile <<               arg.value.ul   ;} break;
-									case TypeID::TypeID_float         : { const char fmt[]{   "%f"}; passcnt += sizeof(fmt)-2; assert(arg.length == sizeof(arg.value.f    )); logFile << std::fixed << arg.value.f    ;} break;
-									case TypeID::TypeID_double        : { const char fmt[]{  "%lf"}; passcnt += sizeof(fmt)-2; assert(arg.length == sizeof(arg.value.d    )); logFile << std::fixed << arg.value.d    ;} break;
-									case TypeID::TypeID_char_star     : { const char fmt[]{   "%s"}; passcnt += sizeof(fmt)-2; assert(arg.length == strlen(arg.value.s    )); logFile <<               arg.value.s    ;} break;
-									case TypeID::TypeID_data          : { const char fmt[]{ "%.*s"}; passcnt += sizeof(fmt)-2; assert(arg.length == strlen(arg.value.data )); logFile <<               arg.value.data ;} break;
-									case TypeID::TypeID_void_star     : { const char fmt[]{   "%p"}; passcnt += sizeof(fmt)-2; assert(arg.length == sizeof(arg.value.p    )); logFile <<               arg.value.p    ;} break;
+									case TypeID::TypeID_init: continue;
+									case TypeID::TypeID_char          : { const char fmt[]{   "%c"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.c    ;} break;
+									case TypeID::TypeID_unsigned_char : { const char fmt[]{ "%02x"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.uc   ;} break;
+									case TypeID::TypeID_int           : { const char fmt[]{   "%d"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.i    ;} break;
+									case TypeID::TypeID_unsigned_int  : { const char fmt[]{   "%u"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.ui   ;} break;
+									case TypeID::TypeID_long          : { const char fmt[]{  "%ld"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.l    ;} break;
+									case TypeID::TypeID_unsigned_long : { const char fmt[]{  "%lu"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.ul   ;} break;
+									case TypeID::TypeID_float         : { const char fmt[]{   "%f"}; passcnt += sizeof(fmt)-2; logFile << std::fixed << arg.value.f    ;} break;
+									case TypeID::TypeID_double        : { const char fmt[]{  "%lf"}; passcnt += sizeof(fmt)-2; logFile << std::fixed << arg.value.d    ;} break;
+									case TypeID::TypeID_char_star     : { const char fmt[]{   "%s"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.s    ;} break;
+									case TypeID::TypeID_data          : { const char fmt[]{ "%.*s"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.data ;} break;
+									case TypeID::TypeID_void_star     : { const char fmt[]{   "%p"}; passcnt += sizeof(fmt)-2; logFile <<               arg.value.p    ;} break;
 									default: logFile << "!unknow"; break;
 								}
-								arg.length = 0;
+								arg.type = TypeID::TypeID_init;
 								break;
 							}
 							continue;
@@ -166,7 +164,6 @@ namespace Logger {
 			template<int idxArgument=0, typename...Targs> inline void processParameters(TypeID type, int dataSize, const char *data, Targs&&...args) {
 				PrintfInfomation::ArgumentInfo &arg = printfInfo->args[idxArgument];
 				arg.type = type;
-				arg.length = dataSize;
 				memcpy(arg.value.data, data, dataSize);
 				arg.value.data[dataSize] = '\0';
 				processParameters<idxArgument+1>(std::forward<Targs>(args)...);
@@ -176,13 +173,10 @@ namespace Logger {
 				arg.type = type;
 				using TYPE = std::remove_cv_t<std::remove_reference_t<std::decay_t<T>>>;
 				if constexpr (std::is_same_v<TYPE, const char*> or std::is_same_v<TYPE, char*>) {
-					arg.length = strlen(value);
 					strcpy(arg.value.s, value);
 				} else if constexpr (std::is_same_v<TYPE, std::string>) {
-					arg.length = value.size();
 					strcpy(arg.value.s, value.c_str());
 				} else {
-					arg.length = sizeof(T);
 					arg.value = *reinterpret_cast<PrintfInfomation::ArgumentInfo::Argument*>(&std::forward<T>(value));
 				}
 				processParameters<idxArgument+1>(std::forward<Targs>(args)...);
