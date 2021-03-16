@@ -8,5 +8,11 @@
 Logger.hpp
 	主要的並且是唯一的檔案。
 
+nplog.h
+	相容於tradetron的日誌nplog、nqlog
+
+nqlog.h
+	相容於tradetron的日誌nplog、nqlog
+
 main.cpp
 	使用範例檔。

@@ -1,4 +1,12 @@
-#include "Logger.hpp"
+/*
+舊版nplog與nqlog使用的編譯指令：
+g++ -I. -I/home/tradetron/libs/include -g -pthread -O2 -Wall -DDEBUG -DUDEBUG -D_VR_LINUX -DHAVE_SYS_RESOURCE_H -DHAVE_STRUCT_RLIMIT -std=gnu++11 -I../../../boost_1_60_0/ -c main.cpp && g++ -pthread -L. -lut -lrt -o go.old main.o uutil.o prof2.o prof.o dlist.o lru.o hash.o dec.o dset.o heap.o heapdbg.o hexdump.o plog.o uassert.o dbgprint.o nstring.o prime.o dirutil.o md5.o strtoken.o utgetopt.o tokenizer.o tcputil.o 1024.o umail.o ummap.o TimeUtil.o argtoken.o consio.o utthread.o fdlock.o uumutex.o utmem.o utmon.o dynq.o hi_util.o utthread_rwlock.o mtb_hash.o txtutil.o rbfq.o qlog.o mmq.o rbfq1.o mmq1.o mmq_mgr.o uu_assort.o uupwd.o uuthrdsafe.o udputil.o uubase64.o crc32c.o endian.o uu_cache_line.o nplog.o nqlog.o ebcdic.o utbcdmap.o dynq2.o mtb2_hash.o && ll go* && rm go.old.log
+及其執行指令：
+rm -f go.*.log && echo ---go.old--- && go.old 100 go.old.a go.old.b && echo ---go.new--- && go.new 100 go.new.a go.new.b && ll go*
+*/
+
+#include "nplog.h"
+#include "nqlog.h"
 
 #include <thread>
 #include <time.h>
@@ -91,14 +99,12 @@ template<unsigned repeat> void case1(const int idxThread, const unsigned int tim
 }
 
 int main(int argc, char **argv) {
-	if (argc < 2) return 0;
+	if (argc < 4) return 0;
 	int times = atoi(argv[1]);
 	char logFName1[100];
 	char logFName2[100];
-	const char tbase1[] = "go.a";
-	const char tbase2[] = "go.b";
-	snprintf(logFName1, sizeof(logFName1), "%s.log", tbase1);
-	snprintf(logFName2, sizeof(logFName2), "%s.log", tbase2);
+	snprintf(logFName1, sizeof(logFName1), "%s.log", argv[2]);
+	snprintf(logFName2, sizeof(logFName2), "%s.log", argv[3]);
 	npLogOpen( &tnplog1, logFName1, 0 /* autoFlushFlg */ );
 	npLogOpen( &tnplog2, logFName2, 0 /* autoFlushFlg */ );
 	nqlog_open( &tnqlog1, (char *) "ftt_nqlog" /* nqlog_id */,
