@@ -15,8 +15,10 @@ struct timespec diff(struct timespec start, struct timespec end) {
 	return temp;
 }
 
-nplog_t tnplog;
-nqlog_t tnqlog;
+nplog_t tnplog1;
+nqlog_t tnqlog1;
+nplog_t tnplog2;
+nqlog_t tnqlog2;
 
 void nplog_write_log_func_empty(void *, const char *, ...){}
 void nplog_flush_func_empty(void *){}
@@ -58,7 +60,19 @@ template<unsigned repeat> void case1(const int idxThread, const unsigned int tim
 	timediff.stamp();
 	for (int t = 1; t <= repeat; ++t) {
 		for (int i = 0; i < times; ++i) {
-			nqlog_write(&tnqlog, "0123456789 %d %d %d %p %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
+			nqlog_write(&tnqlog1, "0123456789 %d %d %d %p %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
+				, nqlog_int    , idxThread
+				, nqlog_int    , t
+				, nqlog_int    , i
+				, nqlog_ptr    , &i
+				, nqlog_double , i*1.6
+				, nqlog_str    , "c-string-"
+				, nqlog_data   , 6, "data-type"
+				, nqlog_float  , i/1.1f
+				, nqlog_char   , static_cast<char>('$'+i%6)
+				, nqlog_end
+			);
+			nqlog_write(&tnqlog2, "9876543210 %d %d %d %p %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
 				, nqlog_int    , idxThread
 				, nqlog_int    , t
 				, nqlog_int    , i
@@ -79,12 +93,21 @@ template<unsigned repeat> void case1(const int idxThread, const unsigned int tim
 int main(int argc, char **argv) {
 	if (argc < 2) return 0;
 	int times = atoi(argv[1]);
-	char logFName[100];
-	const char tbase[] = "go.old";
-	snprintf(logFName, sizeof(logFName), "%s.log", tbase);
-	npLogOpen( &tnplog, logFName, 0 /* autoFlushFlg */ );
-	nqlog_open( &tnqlog, (char *) "ftt_nqlog" /* nqlog_id */,
-					&tnplog,
+	char logFName1[100];
+	char logFName2[100];
+	const char tbase1[] = "go.a";
+	const char tbase2[] = "go.b";
+	snprintf(logFName1, sizeof(logFName1), "%s.log", tbase1);
+	snprintf(logFName2, sizeof(logFName2), "%s.log", tbase2);
+	npLogOpen( &tnplog1, logFName1, 0 /* autoFlushFlg */ );
+	npLogOpen( &tnplog2, logFName2, 0 /* autoFlushFlg */ );
+	nqlog_open( &tnqlog1, (char *) "ftt_nqlog" /* nqlog_id */,
+					&tnplog1,
+					nplog_write_log_func,
+					nplog_flush_func, 20 /* autoFlushTimeInt */ ,
+					50); /* preAllocLogMsgNodeCount */
+	nqlog_open( &tnqlog2, (char *) "ftt_nqlog" /* nqlog_id */,
+					&tnplog2,
 					nplog_write_log_func,
 					nplog_flush_func, 20 /* autoFlushTimeInt */ ,
 					50); /* preAllocLogMsgNodeCount */
@@ -100,8 +123,10 @@ int main(int argc, char **argv) {
 		}
 	}
 	timespec_get(&time[1], TIME_UTC);
-	nqlog_close(&tnqlog, -1 /* wait for flush all possible queued log msg */ );
-	npLogClose(&tnplog);
+	nqlog_close(&tnqlog1, -1 /* wait for flush all possible queued log msg */ );
+	nqlog_close(&tnqlog2, -1 /* wait for flush all possible queued log msg */ );
+	npLogClose(&tnplog1);
+	npLogClose(&tnplog2);
 	timespec_get(&time[2], TIME_UTC);
 	struct timespec time_ab = diff(time[0], time[1]);
 	struct timespec time_bc = diff(time[1], time[2]);

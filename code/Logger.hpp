@@ -93,13 +93,16 @@ namespace Logger {
 	template<typename LoggerCore = LoggerCore<PrintfInfomation,19>> class LoggerConsumer {
 		private:
 			LoggerCore &core;
-			const std::string logPath;
+			std::string logPath;
 			std::ofstream logFile;
 			std::thread thread;
 			std::atomic_bool running;
 		protected:
 			void main() { while (running) consume(); consume(); }
 			void consume() {
+				// std::this_thread::yield();
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+				if (!logFile.is_open()) return;
 				for (PrintfInfomation *printfInfo; (printfInfo = core.getAvailableSpaceForConsumer()) != nullptr; ) {
 					logFile << getTime("%H:%M:%S.", std::chrono::system_clock::now()) << " ";
 					for (auto *itr=printfInfo->formatting, *itr_end=printfInfo->formatting+sizeof(PrintfInfomation::formatting); itr < itr_end; ++itr ) {
@@ -134,8 +137,14 @@ namespace Logger {
 			}
 		public:
 			~LoggerConsumer() { close(); }
-			LoggerConsumer(LoggerCore &core):core(core), logPath("go."+getTime()+".log"), logFile(logPath, std::ofstream::out), thread(&LoggerConsumer::main, this), running(true) {}
+			LoggerConsumer(LoggerCore &core):core(core), thread(&LoggerConsumer::main, this), running(true) {}
 			void close() { running = false; if (thread.joinable()) thread.join(); }
+			bool setFilename(const std::string &logFilename) {
+				logPath = logFilename;
+				logFile.close();
+				logFile.open(logPath, std::ofstream::out);
+				return logFile.is_open();
+			}
 			void flush() {
 				if (!!logFile) logFile << std::flush;
 				else           logFile.clear();
@@ -241,8 +250,14 @@ namespace compatibility_nplog_nqlog {
 }
 
 namespace compatibility_nplog_nqlog {
-	struct nplog_t {};
-	struct nqlog_t {};
+	struct nplog_t {
+		std::string logFilename;
+	};
+	struct nqlog_t {
+		Logger::LoggerCore<Logger::PrintfInfomation,19> core;
+		Logger::LoggerConsumer<decltype(core)> logger;
+		nqlog_t(): logger(core) {}
+	};
 	using write_log_func = void (*)(void *phlog, const char *msgFmt, ...);
 	using flush_func = void (*)(void *phlog);
 	write_log_func nplog_write_log_func = nullptr;
@@ -250,16 +265,11 @@ namespace compatibility_nplog_nqlog {
 }
 
 namespace compatibility_nplog_nqlog {
-	static Logger::LoggerCore<Logger::PrintfInfomation,19> core;
-	static Logger::LoggerConsumer<decltype(core)> logger(core);
-}
-
-namespace compatibility_nplog_nqlog {
-	void npLogOpen(nplog_t *, char *, int) {}
-	void npLogClose(nplog_t *) {}
-	void nqlog_open(nqlog_t *, char *, void *, write_log_func, flush_func, int, int) { }
-	void nqlog_close(nqlog_t *, int) { logger.close(); }
-	template<typename...Targs> inline void nqlog_write(nqlog_t *, Targs...args) { (Logger::LoggerProducer<decltype(core)>(core))(args...); }
+	void npLogOpen(nplog_t *nplog, char *logFilename, int)                                     { nplog->logFilename = logFilename; }
+	void npLogClose(nplog_t *)                                                                 {}
+	void nqlog_open(nqlog_t *nqlog, char *, void *nplog, write_log_func, flush_func, int, int) { nqlog->logger.setFilename(static_cast<nplog_t*>(nplog)->logFilename); }
+	void nqlog_close(nqlog_t *nqlog, int)                                                      { nqlog->logger.close(); }
+	template<typename...Targs> inline void nqlog_write(nqlog_t *nqlog, Targs...args)           { (Logger::LoggerProducer<decltype(nqlog_t::core)>(nqlog->core))(args...); }
 }
 
 using namespace compatibility_nplog_nqlog;
