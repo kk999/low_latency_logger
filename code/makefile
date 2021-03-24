@@ -1,9 +1,8 @@
 # CC:=g++
 CC:=clang++
-INSTDIR:=/mnt/c/Job/TradeTron/project/TTLog/bin
 # CFLAGS:=-Wall -ansi -std=c++11 -static -g
 # CFLAGS:=-Wall -ansi -std=c++17 -static -O2 -DNDEBUG
-CFLAGS:=-Wall -ansi -std=c++17 -static -O2
+CFLAGS:=-Wall -ansi -std=c++17 -static -O2 -mcmodel=large
 # CFLAGS:= -g -pthread -O1 -Wall -DDEBUG -DUDEBUG -D_VR_LINUX -DHAVE_SYS_RESOURCE_H -DHAVE_STRUCT_RLIMIT -std=c++17
 # CFLAGS:= -g -pthread -Wall -DDEBUG -DUDEBUG -D_VR_LINUX -DHAVE_SYS_RESOURCE_H -DHAVE_STRUCT_RLIMIT -std=c++17
 srcdir:=.
@@ -26,7 +25,10 @@ clean:
 	rm -rf $(objdir)/$(obj) $(exe)
 
 go:
-	$(exe) 1000
+	$(exe) 100 a b
 
 install:$(exe)
 	scp $(exe) tradetron@omstest:/home/tradetron/libs/libsrc/ut/go.new
+
+release:
+	scp Logger.hpp nplog.h nqlog.h makefile main.cpp jimmy@omstest:/home/jimmy/Logger/core/

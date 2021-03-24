@@ -42,22 +42,22 @@ template<unsigned repeat> class TimeDiff {
 		void stamp() { timespec_get(&time[cnt++], TIME_UTC); }
 		void report() {
 			struct timespec time_diff[sizeof(time)/sizeof(*time)-1];
-			for (int t = 0; t < sizeof(time)/sizeof(*time); ++t)
+			for (std::size_t t = 0; t < repeat; ++t)
 				time_diff[t] = diff(time[t], time[t+1]);
 			long time_diff_ns[sizeof(time_diff)/sizeof(*time_diff)];
-			for (int t = 0; t < sizeof(time_diff_ns)/sizeof(*time_diff_ns); ++t)
+			for (std::size_t t = 0; t < sizeof(time_diff_ns)/sizeof(*time_diff_ns); ++t)
 				time_diff_ns[t] = time_diff[t].tv_sec*1000000000 + time_diff[t].tv_nsec;
 			printf("(%10ld", time_diff_ns[0]);
-			for (int t = 1; t < sizeof(time_diff_ns)/sizeof(*time_diff_ns); ++t) printf(",%10ld", time_diff_ns[t]);
+			for (std::size_t t = 1; t < sizeof(time_diff_ns)/sizeof(*time_diff_ns); ++t) printf(",%10ld", time_diff_ns[t]);
 			printf(")/%d=avg(%6ld", times, time_diff_ns[0]/times);
-			for (int t = 1; t < sizeof(time_diff_ns)/sizeof(*time_diff_ns); ++t) printf(",%6ld", time_diff_ns[t]/times);
+			for (std::size_t t = 1; t < sizeof(time_diff_ns)/sizeof(*time_diff_ns); ++t) printf(",%6ld", time_diff_ns[t]/times);
 			printf(")ns\n");
 		}
 };
 
 #include <functional>
 #include <random>
-template<unsigned repeat> void case1(const int idxThread, const unsigned int times) {
+template<unsigned int repeat> void case1(const int idxThread, const unsigned int times) {
 	std::random_device rd;
 	std::default_random_engine gen = std::default_random_engine(rd());
 	std::uniform_int_distribution<int> dis(1,10);
@@ -66,13 +66,13 @@ template<unsigned repeat> void case1(const int idxThread, const unsigned int tim
 	std::this_thread::sleep_for(std::chrono::milliseconds(delay));
 	TimeDiff<repeat> timediff(times);
 	timediff.stamp();
-	for (int t = 1; t <= repeat; ++t) {
-		for (int i = 0; i < times; ++i) {
-			nqlog_write(&tnqlog1, "0123456789 %d %d %d %p %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
+	for (unsigned int t = 1; t <= repeat; ++t) {
+		for (unsigned int i = 0; i < times; ++i) {
+			nqlog_write(&tnqlog1, "%p 0123456789 %d %d %d %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
+				, nqlog_ptr    , &i
 				, nqlog_int    , idxThread
 				, nqlog_int    , t
 				, nqlog_int    , i
-				, nqlog_ptr    , &i
 				, nqlog_double , i*1.6
 				, nqlog_str    , "c-string-"
 				, nqlog_data   , 6, "data-type"
@@ -80,11 +80,11 @@ template<unsigned repeat> void case1(const int idxThread, const unsigned int tim
 				, nqlog_char   , static_cast<char>('$'+i%6)
 				, nqlog_end
 			);
-			nqlog_write(&tnqlog2, "9876543210 %d %d %d %p %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
+			nqlog_write(&tnqlog2, "%p 9876543210 %d %d %d %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
+				, nqlog_ptr    , &i
 				, nqlog_int    , idxThread
 				, nqlog_int    , t
 				, nqlog_int    , i
-				, nqlog_ptr    , &i
 				, nqlog_double , i*1.6
 				, nqlog_str    , "c-string-"
 				, nqlog_data   , 6, "data-type"
