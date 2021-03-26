@@ -165,6 +165,8 @@ namespace Logger {
 				strcpy(printfInfo->formatting, format);
 				processParameters(std::forward<Targs>(args)...);
 			}
+			template<int idxArgument=0> inline void processParameters() {
+			}
 			template<int idxArgument=0> inline void processParameters(TypeID type) {
 				assert(type == TypeID_end);
 			}
