@@ -168,10 +168,20 @@ namespace Logger {
 			template<int idxArgument=0> inline void processParameters(TypeID type) {
 				assert(type == TypeID_end);
 			}
-			template<int idxArgument=0, typename...Targs> inline void processParameters(TypeID type, int dataSize, const char *data, Targs&&...args) {
+			template<int idxArgument=0
+				, typename T
+				, typename TEnable = std::enable_if_t<std::is_arithmetic<T>::value && !std::is_same<T, char>::value, T>
+				, typename...Targs
+			>
+			inline void processParameters(TypeID type, T dataSize, const char *data, Targs&&...args) {
 				processParameters<idxArgument>(type, dataSize, data, std::forward<Targs>(args)...);
 			}
-			template<int idxArgument=0, typename...Targs> inline void processParameters(TypeID type, int dataSize, char *data, Targs&&...args) {
+			template<int idxArgument=0
+				, typename T
+				, typename TEnable = std::enable_if_t<std::is_arithmetic<T>::value && !std::is_same<T, char>::value, T>
+				, typename...Targs
+			>
+			inline void processParameters(TypeID type, T dataSize, char *data, Targs&&...args) {
 				PrintfInfomation::ArgumentInfo &arg = printfInfo->args[idxArgument];
 				arg.type = type;
 				memcpy(arg.value.data, data, dataSize);
