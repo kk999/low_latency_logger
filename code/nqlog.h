@@ -73,13 +73,13 @@ namespace compatibility_nplog_nqlog {
 	};
 	using write_log_func = void (*)(void *phlog, const char *msgFmt, ...);
 	using flush_func = void (*)(void *phlog);
-	write_log_func nplog_write_log_func = nullptr;
-	flush_func     nplog_flush_func     = nullptr;
+	inline write_log_func nplog_write_log_func = nullptr;
+	inline flush_func     nplog_flush_func     = nullptr;
 }
 
 namespace compatibility_nplog_nqlog {
-	int nqlog_open(nqlog_t *nqlog, char *, void *nplog, write_log_func, flush_func, int, int) { nqlog->logger.setFilename(static_cast<nplog_t*>(nplog)->logFilename); return 0; }
-	void nqlog_close(nqlog_t *nqlog, int)                                                      { nqlog->logger.close(); }
+	inline int nqlog_open(nqlog_t *nqlog, char *, void *nplog, write_log_func, flush_func, int, int) { nqlog->logger.setFilename(static_cast<nplog_t*>(nplog)->logFilename); return 0; }
+	inline void nqlog_close(nqlog_t *nqlog, int)                                                      { nqlog->logger.close(); }
 	template<typename...Targs> inline void nqlog_write(nqlog_t *nqlog, Targs...args)           { (Logger::LoggerProducer<decltype(nqlog_t::core)>(nqlog->core))(args...); }
 }
 
