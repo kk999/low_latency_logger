@@ -93,7 +93,7 @@ namespace Logger {
 				return nullptr;
 			}
 	};
-	template<typename LoggerCore = LoggerCore<PrintfInfomation,19>> class LoggerConsumer {
+	template<typename LoggerCore> class LoggerConsumer {
 		private:
 			LoggerCore &core;
 			std::string logPath;
@@ -153,7 +153,7 @@ namespace Logger {
 				else           logFile.clear();
 			}
 	};
-	template<typename LoggerCore = LoggerCore<PrintfInfomation,19>> class LoggerProducer {
+	template<typename LoggerCore> class LoggerProducer {
 		private:
 			PrintfInfomation *printfInfo;
 		public:
