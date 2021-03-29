@@ -66,7 +66,7 @@ namespace Logger {
 				void *p;               // TypeID_void_star
 			} value;
 		} args[maxArgCnt];
-		volatile bool dirty;
+		std::atomic_bool dirty;
 	};
 }
 
@@ -80,16 +80,15 @@ namespace Logger {
 			unsigned int idxConsumer;
 		public:
 			LoggerCore(): idxProducer(-1), idxConsumer{0} {
-				for (auto memoryData: memPool) reinterpret_cast<PrintfInformation*>(memoryData)->dirty = false;
+				for (auto memoryData: memPool) reinterpret_cast<PrintfInformation*>(memoryData)->dirty.store(false, std::memory_order_relaxed);
 			}
 			T* getAvailableSpaceForProducer() {
 				PrintfInformation *printfInfo = reinterpret_cast<PrintfInformation*>(memPool[++idxProducer & poolMask]);
-				while (printfInfo->dirty);
+				while (printfInfo->dirty.exchange(true, std::memory_order_acq_rel));
 				return printfInfo;
 			}
 			T* getAvailableSpaceForConsumer() {
-				PrintfInformation *printfInfo = reinterpret_cast<PrintfInformation*>(memPool[idxConsumer]);
-				if (printfInfo->dirty) {
+				if (PrintfInformation *printfInfo = reinterpret_cast<PrintfInformation*>(memPool[idxConsumer]); printfInfo->dirty.load(std::memory_order_acquire)) {
 					++idxConsumer &= poolMask;
 					return printfInfo;
 				}
@@ -138,7 +137,7 @@ namespace Logger {
 						}
 						logFile << *itr;
 					}
-					printfInfo->dirty = false;
+					printfInfo->dirty.store(false);
 				}
 			}
 		public:
@@ -166,7 +165,6 @@ namespace Logger {
 			template<typename...Targs> inline void operator()(const char *format, Targs&&... args) {
 				strcpy(printfInfo->formatting, format);
 				processParameters(std::forward<Targs>(args)...);
-				printfInfo->dirty = true;
 			}
 			template<int idxArgument=0> inline void processParameters() {
 			}
