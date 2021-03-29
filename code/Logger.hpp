@@ -66,6 +66,7 @@ namespace Logger {
 				void *p;               // TypeID_void_star
 			} value;
 		} args[maxArgCnt];
+		volatile bool dirty;
 	};
 }
 
@@ -79,14 +80,16 @@ namespace Logger {
 			unsigned int idxConsumer;
 		public:
 			LoggerCore(): idxProducer(-1), idxConsumer{0} {
-				for (auto memoryData: memPool) reinterpret_cast<PrintfInfomation*>(memoryData)->formatting[0] = '\0';
+				for (auto memoryData: memPool) reinterpret_cast<PrintfInfomation*>(memoryData)->dirty = false;
 			}
 			T* getAvailableSpaceForProducer() {
-				return reinterpret_cast<PrintfInfomation*>(memPool[++idxProducer & poolMask]);
+				PrintfInfomation *printfInfo = reinterpret_cast<PrintfInfomation*>(memPool[++idxProducer & poolMask]);
+				while (printfInfo->dirty);
+				return printfInfo;
 			}
 			T* getAvailableSpaceForConsumer() {
 				PrintfInfomation *printfInfo = reinterpret_cast<PrintfInfomation*>(memPool[idxConsumer]);
-				if (printfInfo->formatting[0] != '\0') {
+				if (printfInfo->dirty) {
 					++idxConsumer &= poolMask;
 					return printfInfo;
 				}
@@ -135,7 +138,7 @@ namespace Logger {
 						}
 						logFile << *itr;
 					}
-					printfInfo->formatting[0] = '\0';
+					printfInfo->dirty = false;
 				}
 			}
 		public:
@@ -158,12 +161,12 @@ namespace Logger {
 			PrintfInfomation *printfInfo;
 		public:
 			LoggerProducer(LoggerCore &core) {
-				do printfInfo = core.getAvailableSpaceForProducer();
-				while (printfInfo->formatting[0] != '\0');
+				printfInfo = core.getAvailableSpaceForProducer();
 			}
 			template<typename...Targs> inline void operator()(const char *format, Targs&&... args) {
 				strcpy(printfInfo->formatting, format);
 				processParameters(std::forward<Targs>(args)...);
+				printfInfo->dirty = true;
 			}
 			template<int idxArgument=0> inline void processParameters() {
 			}
