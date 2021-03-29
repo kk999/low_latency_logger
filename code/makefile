@@ -32,3 +32,5 @@ install:$(exe)
 
 release:
 	scp Logger.hpp nplog.h nqlog.h makefile main.cpp jimmy@omstest:/home/jimmy/Logger/core/
+	scp Logger.hpp nplog.h nqlog.h jimmy@172.16.8.252:/home/jimmy/cppdev/lib_tradetron/libs/include
+	scp Logger.hpp nplog.h nqlog.h jimmy@172.16.8.252:/home/jimmy/cppdev/lib_tradetron/libs/libsrc/ut
