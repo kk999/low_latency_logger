@@ -137,6 +137,7 @@ namespace Logger {
 						}
 						logFile << *itr;
 					}
+					flush();
 					printfInfo->dirty.store(false);
 				}
 			}
