@@ -67,7 +67,7 @@ namespace compatibility_nplog_nqlog {
 
 namespace compatibility_nplog_nqlog {
 	struct nqlog_t {
-		Logger::LoggerCore<Logger::PrintfInfomation,19> core;
+		Logger::LoggerCore<Logger::PrintfInformation,19> core;
 		Logger::LoggerConsumer<decltype(core)> logger;
 		nqlog_t(): logger(core) {}
 	};

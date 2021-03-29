@@ -42,12 +42,12 @@ namespace Logger {
 		TypeID_void_star,
 		TypeID_end = 0X77AABBFF
 	};
-	struct PrintfInfomation {
+	struct PrintfInformation {
 		enum {
-			maxPrintfInfomation = 1<<11,
+			maxPrintfInformation = 1<<11,
 			maxArgCnt           = 27,
 			maxArgSize          = 64,
-			maxFormatStrLen     = maxPrintfInfomation - maxArgCnt * maxArgSize,
+			maxFormatStrLen     = maxPrintfInformation - maxArgCnt * maxArgSize,
 		};
 		char formatting[maxFormatStrLen];
 		struct ArgumentInfo {
@@ -80,15 +80,15 @@ namespace Logger {
 			unsigned int idxConsumer;
 		public:
 			LoggerCore(): idxProducer(-1), idxConsumer{0} {
-				for (auto memoryData: memPool) reinterpret_cast<PrintfInfomation*>(memoryData)->dirty = false;
+				for (auto memoryData: memPool) reinterpret_cast<PrintfInformation*>(memoryData)->dirty = false;
 			}
 			T* getAvailableSpaceForProducer() {
-				PrintfInfomation *printfInfo = reinterpret_cast<PrintfInfomation*>(memPool[++idxProducer & poolMask]);
+				PrintfInformation *printfInfo = reinterpret_cast<PrintfInformation*>(memPool[++idxProducer & poolMask]);
 				while (printfInfo->dirty);
 				return printfInfo;
 			}
 			T* getAvailableSpaceForConsumer() {
-				PrintfInfomation *printfInfo = reinterpret_cast<PrintfInfomation*>(memPool[idxConsumer]);
+				PrintfInformation *printfInfo = reinterpret_cast<PrintfInformation*>(memPool[idxConsumer]);
 				if (printfInfo->dirty) {
 					++idxConsumer &= poolMask;
 					return printfInfo;
@@ -109,9 +109,9 @@ namespace Logger {
 				// std::this_thread::yield();
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 				if (!logFile.is_open()) return;
-				for (PrintfInfomation *printfInfo; (printfInfo = core.getAvailableSpaceForConsumer()) != nullptr; ) {
+				for (PrintfInformation *printfInfo; (printfInfo = core.getAvailableSpaceForConsumer()) != nullptr; ) {
 					logFile << getTime("%H:%M:%S.", std::chrono::system_clock::now()) << " ";
-					for (auto *itr=printfInfo->formatting, *itr_end=printfInfo->formatting+sizeof(PrintfInfomation::formatting); itr < itr_end; ++itr ) {
+					for (auto *itr=printfInfo->formatting, *itr_end=printfInfo->formatting+sizeof(PrintfInformation::formatting); itr < itr_end; ++itr ) {
 						if (*itr == '%') {
 							for (auto &arg: printfInfo->args) {
 								switch (arg.type) {
@@ -158,7 +158,7 @@ namespace Logger {
 	};
 	template<typename LoggerCore> class LoggerProducer {
 		private:
-			PrintfInfomation *printfInfo;
+			PrintfInformation *printfInfo;
 		public:
 			LoggerProducer(LoggerCore &core) {
 				printfInfo = core.getAvailableSpaceForProducer();
@@ -190,14 +190,14 @@ namespace Logger {
 				, typename...Targs
 			>
 			inline void processParameters(TypeID type, T dataSize, U *data, Targs&&...args) {
-				PrintfInfomation::ArgumentInfo &arg = printfInfo->args[idxArgument];
+				PrintfInformation::ArgumentInfo &arg = printfInfo->args[idxArgument];
 				arg.type = type;
 				memcpy(arg.value.data, data, dataSize);
 				arg.value.data[dataSize] = '\0';
 				processParameters<idxArgument+1>(std::forward<Targs>(args)...);
 			}
 			template<int idxArgument=0, typename...Targs, typename T> inline void processParameters(TypeID type, T &&value, Targs&&...args) {
-				PrintfInfomation::ArgumentInfo &arg = printfInfo->args[idxArgument];
+				PrintfInformation::ArgumentInfo &arg = printfInfo->args[idxArgument];
 				arg.type = type;
 				using TYPE = std::remove_cv_t<std::remove_reference_t<std::decay_t<T>>>;
 				if constexpr (std::is_same_v<TYPE, const char*> or std::is_same_v<TYPE, char*>) {
@@ -205,7 +205,7 @@ namespace Logger {
 				} else if constexpr (std::is_same_v<TYPE, std::string>) {
 					strcpy(arg.value.s, value.c_str());
 				} else {
-					arg.value = *reinterpret_cast<PrintfInfomation::ArgumentInfo::Argument*>(&std::forward<T>(value));
+					arg.value = *reinterpret_cast<PrintfInformation::ArgumentInfo::Argument*>(&std::forward<T>(value));
 				}
 				processParameters<idxArgument+1>(std::forward<Targs>(args)...);
 			}
