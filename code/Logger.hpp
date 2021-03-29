@@ -45,7 +45,7 @@ namespace Logger {
 	struct PrintfInfomation {
 		enum {
 			maxPrintfInfomation = 1<<11,
-			maxArgCnt           = 20,
+			maxArgCnt           = 27,
 			maxArgSize          = 64,
 			maxFormatStrLen     = maxPrintfInfomation - maxArgCnt * maxArgSize,
 		};
