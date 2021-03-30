@@ -2,7 +2,8 @@
 CC:=clang++
 # CFLAGS:=-Wall -ansi -std=c++11 -static -g
 # CFLAGS:=-Wall -ansi -std=c++17 -static -O2 -DNDEBUG
-CFLAGS:=-Wall -ansi -std=c++17 -static -O2 -mcmodel=large
+# CFLAGS:=-Wall -ansi -std=c++17 -static -O2 -mcmodel=large
+CFLAGS:=-Wall -ansi -std=c++17 -static -O2
 # CFLAGS:= -g -pthread -O1 -Wall -DDEBUG -DUDEBUG -D_VR_LINUX -DHAVE_SYS_RESOURCE_H -DHAVE_STRUCT_RLIMIT -std=c++17
 # CFLAGS:= -g -pthread -Wall -DDEBUG -DUDEBUG -D_VR_LINUX -DHAVE_SYS_RESOURCE_H -DHAVE_STRUCT_RLIMIT -std=c++17
 srcdir:=.

@@ -78,11 +78,19 @@ namespace compatibility_nplog_nqlog {
 }
 
 namespace compatibility_nplog_nqlog {
-	inline int nqlog_open(nqlog_t *nqlog, char *, void *nplog, write_log_func, flush_func, int, int) {
-		return nqlog->logger.setFilename(static_cast<nplog_t*>(nplog)->logFilename)? 0: -1;
+	inline void nqlog_close(nqlog_t *&nqlog, int) {
+		if (nqlog != nullptr) {
+			nqlog->logger.close();
+			delete nqlog;
+			nqlog = nullptr;
+		}
 	}
-	inline void nqlog_close(nqlog_t *nqlog, int) {
-		nqlog->logger.close();
+	inline int nqlog_open(nqlog_t *&nqlog, char *, void *nplog, write_log_func, flush_func, int, int) {
+		nqlog_close(nqlog, 0);
+		nqlog = new nqlog_t();
+		assert(nqlog != nullptr);
+		assert(nplog != nullptr);
+		return nqlog->logger.setFilename(static_cast<nplog_t*>(nplog)->logFilename)? 0: -1;
 	}
 	template<typename...Targs> inline void nqlog_write(nqlog_t *nqlog, Targs...args) {
 		(Logger::LoggerProducer<decltype(nqlog_t::core)>(nqlog->core))(args...);

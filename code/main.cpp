@@ -23,10 +23,10 @@ struct timespec diff(struct timespec start, struct timespec end) {
 	return temp;
 }
 
-nplog_t tnplog1;
-nqlog_t tnqlog1;
-nplog_t tnplog2;
-nqlog_t tnqlog2;
+static nplog_t *tnplog1 = nullptr;
+static nqlog_t *tnqlog1 = nullptr;
+static nplog_t *tnplog2 = nullptr;
+static nqlog_t *tnqlog2 = nullptr;
 
 void nplog_write_log_func_empty(void *, const char *, ...){}
 void nplog_flush_func_empty(void *){}
@@ -70,7 +70,7 @@ template<unsigned int repeat> void case1(const int idxThread, const unsigned int
 	decltype(sizeof(datatype)) datatypesize = 6;
 	for (unsigned int t = 1; t <= repeat; ++t) {
 		for (unsigned int i = 0; i < times; ++i) {
-			nqlog_write(&tnqlog1, "%p 0123456789 %d %d %d %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
+			nqlog_write(tnqlog1, "%p 0123456789 %d %d %d %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
 				, nqlog_ptr    , &i
 				, nqlog_int    , idxThread
 				, nqlog_int    , t
@@ -82,7 +82,7 @@ template<unsigned int repeat> void case1(const int idxThread, const unsigned int
 				, nqlog_char   , static_cast<char>('$'+i%6)
 				, nqlog_end
 			);
-			nqlog_write(&tnqlog2, "%p 9876543210 %d %d %d %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
+			nqlog_write(tnqlog2, "%p 9876543210 %d %d %d %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
 				, nqlog_ptr    , &i
 				, nqlog_int    , idxThread
 				, nqlog_int    , t
@@ -107,15 +107,15 @@ int main(int argc, char **argv) {
 	char logFName2[100];
 	snprintf(logFName1, sizeof(logFName1), "%s.log", argv[2]);
 	snprintf(logFName2, sizeof(logFName2), "%s.log", argv[3]);
-	npLogOpen( &tnplog1, logFName1, 0 /* autoFlushFlg */ );
-	npLogOpen( &tnplog2, logFName2, 0 /* autoFlushFlg */ );
-	nqlog_open( &tnqlog1, (char *) "ftt_nqlog" /* nqlog_id */,
-					&tnplog1,
+	npLogOpen(tnplog1, logFName1, 0 /* autoFlushFlg */ );
+	npLogOpen(tnplog2, logFName2, 0 /* autoFlushFlg */ );
+	nqlog_open(tnqlog1, (char *) "ftt_nqlog" /* nqlog_id */,
+					tnplog1,
 					nplog_write_log_func,
 					nplog_flush_func, 20 /* autoFlushTimeInt */ ,
 					50); /* preAllocLogMsgNodeCount */
-	nqlog_open( &tnqlog2, (char *) "ftt_nqlog" /* nqlog_id */,
-					&tnplog2,
+	nqlog_open(tnqlog2, (char *) "ftt_nqlog" /* nqlog_id */,
+					tnplog2,
 					nplog_write_log_func,
 					nplog_flush_func, 20 /* autoFlushTimeInt */ ,
 					50); /* preAllocLogMsgNodeCount */
@@ -131,10 +131,10 @@ int main(int argc, char **argv) {
 		}
 	}
 	timespec_get(&time[1], TIME_UTC);
-	nqlog_close(&tnqlog1, -1 /* wait for flush all possible queued log msg */ );
-	nqlog_close(&tnqlog2, -1 /* wait for flush all possible queued log msg */ );
-	npLogClose(&tnplog1);
-	npLogClose(&tnplog2);
+	nqlog_close(tnqlog1, -1 /* wait for flush all possible queued log msg */ );
+	nqlog_close(tnqlog2, -1 /* wait for flush all possible queued log msg */ );
+	npLogClose(tnplog1);
+	npLogClose(tnplog2);
 	timespec_get(&time[2], TIME_UTC);
 	struct timespec time_ab = diff(time[0], time[1]);
 	struct timespec time_bc = diff(time[1], time[2]);
