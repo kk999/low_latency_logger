@@ -44,9 +44,9 @@ namespace Logger {
 	};
 	struct PrintfInformation {
 		enum {
-			maxPrintfInformation = 1<<11,
-			maxArgCnt           = 27,
-			maxArgSize          = 64,
+			maxPrintfInformation = 1<<13,
+			maxArgCnt           = 66,
+			maxArgSize          = 108,
 			maxFormatStrLen     = maxPrintfInformation - maxArgCnt * maxArgSize,
 		};
 		char formatting[maxFormatStrLen];
@@ -168,9 +168,11 @@ namespace Logger {
 				processParameters(std::forward<Targs>(args)...);
 			}
 			template<int idxArgument=0> inline void processParameters() {
+				static_assert(idxArgument <= PrintfInformation::maxArgCnt, "!Logger::processParameters : Incorrect number of parameters.");
 			}
 			template<int idxArgument=0> inline void processParameters(TypeID type) {
 				assert(type == TypeID_end);
+				processParameters<idxArgument>();
 			}
 			template<int idxArgument=0
 				, typename T
