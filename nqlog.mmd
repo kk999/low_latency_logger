@@ -1,0 +1,49 @@
+sequenceDiagram
+participant main as use case
+participant LoggerConsumer
+participant LoggerProducer
+participant LoggerCore
+rect rgba(255, 200, 255)
+    note right of main: nqlog_open
+    activate main
+    main->>LoggerCore: create
+    activate LoggerCore
+    main->>LoggerConsumer: create
+    activate LoggerConsumer
+end
+deactivate main
+
+rect rgb(200, 255, 255)
+par nqlog_write
+    activate main
+    main->>LoggerProducer: nqlog_write
+    LoggerProducer->>LoggerCore: getAvailableSpaceForProducer
+    LoggerCore-->>LoggerProducer: one node
+    Note over LoggerProducer: data to node
+    deactivate main
+and process log data
+    rect rgb(160, 255, 255)
+    loop Every 10ms
+        activate LoggerConsumer
+        LoggerConsumer->>LoggerCore: getAvailableSpaceForConsumer
+        rect rgb(10, 255, 255)
+        opt have data
+            LoggerCore-->>LoggerConsumer: one node
+            Note over LoggerConsumer: data to file
+        end
+        end
+        deactivate LoggerConsumer
+    end
+    end
+end
+end
+
+rect rgba(255, 200, 255)
+    note right of main: nqlog_close
+    activate main
+    main->>LoggerConsumer: close
+    deactivate LoggerConsumer
+    main->>LoggerCore: close
+    deactivate LoggerCore
+end
+deactivate main
