@@ -4,7 +4,7 @@
 #include <atomic>
 #include <cassert>  // assert
 #include <cstring>  // strlen strcpy memcpy
-#include <fstream>  // fstream
+#include <cstdio>  // FILE fopen fclose fprint fflush
 #include <iomanip>  // stringstream put_time setfill
 #include <iostream>  // std::cerr
 #include <thread>
@@ -110,7 +110,7 @@ namespace Logger {
         private:
             LoggerCore &core;
             std::string logPath;
-            std::ofstream logFile;
+            FILE *logFHandle;
             std::thread thread;
             std::atomic_bool running;
         protected:
@@ -118,26 +118,26 @@ namespace Logger {
             void consume() {
                 // std::this_thread::yield();
                 std::this_thread::sleep_for(std::chrono::milliseconds(10));
-                if (!logFile.is_open()) return;
+                if (logFHandle == nullptr) return;
                 for (PrintfInformation *printfInfo; (printfInfo = core.getAvailableSpaceForConsumer()) != nullptr; ) {
-                    logFile << getTime("%H:%M:%S.", std::chrono::system_clock::now()) << " ";
+                    fprintf(logFHandle, "%s ", getTime("%H:%M:%S.", std::chrono::system_clock::now()).c_str());
                     for (auto *itr=printfInfo->formatting, *itr_end=printfInfo->formatting+sizeof(PrintfInformation::formatting); itr < itr_end; ++itr ) {
                         if (*itr == '%') {
                             for (auto &arg: printfInfo->args) {
                                 switch (arg.type) {
                                     case TypeID::TypeID_init: continue;
-                                    case TypeID::TypeID_char          : itr += sizeof(  "%c")-2; logFile <<               arg.value.c    ; break;
-                                    case TypeID::TypeID_unsigned_char : itr += sizeof("%02x")-2; logFile <<               arg.value.uc   ; break;
-                                    case TypeID::TypeID_int           : itr += sizeof(  "%d")-2; logFile <<               arg.value.i    ; break;
-                                    case TypeID::TypeID_unsigned_int  : itr += sizeof(  "%u")-2; logFile <<               arg.value.ui   ; break;
-                                    case TypeID::TypeID_long          : itr += sizeof( "%ld")-2; logFile <<               arg.value.l    ; break;
-                                    case TypeID::TypeID_unsigned_long : itr += sizeof( "%lu")-2; logFile <<               arg.value.ul   ; break;
-                                    case TypeID::TypeID_float         : itr += sizeof(  "%f")-2; logFile << std::fixed << arg.value.f    ; break;
-                                    case TypeID::TypeID_double        : itr += sizeof( "%lf")-2; logFile << std::fixed << arg.value.d    ; break;
-                                    case TypeID::TypeID_char_star     : itr += sizeof(  "%s")-2; logFile <<               arg.value.s    ; break;
-                                    case TypeID::TypeID_data          : itr += sizeof("%.*s")-2; logFile <<               arg.value.data ; break;
-                                    case TypeID::TypeID_void_star     : itr += sizeof(  "%p")-2; logFile <<               arg.value.p    ; break;
-                                    default: logFile << "!unknow"; break;
+                                    case TypeID::TypeID_char          : itr += sizeof(  "%c")-2; fprintf(logFHandle,   "%c", arg.value.c    ); break;
+                                    case TypeID::TypeID_unsigned_char : itr += sizeof("%02x")-2; fprintf(logFHandle, "%02x", arg.value.uc   ); break;
+                                    case TypeID::TypeID_int           : itr += sizeof(  "%d")-2; fprintf(logFHandle,   "%d", arg.value.i    ); break;
+                                    case TypeID::TypeID_unsigned_int  : itr += sizeof(  "%u")-2; fprintf(logFHandle,   "%u", arg.value.ui   ); break;
+                                    case TypeID::TypeID_long          : itr += sizeof( "%ld")-2; fprintf(logFHandle,  "%ld", arg.value.l    ); break;
+                                    case TypeID::TypeID_unsigned_long : itr += sizeof( "%lu")-2; fprintf(logFHandle,  "%lu", arg.value.ul   ); break;
+                                    case TypeID::TypeID_float         : itr += sizeof(  "%f")-2; fprintf(logFHandle,   "%f", arg.value.f    ); break;
+                                    case TypeID::TypeID_double        : itr += sizeof( "%lf")-2; fprintf(logFHandle,  "%lf", arg.value.d    ); break;
+                                    case TypeID::TypeID_char_star     : itr += sizeof(  "%s")-2; fprintf(logFHandle,   "%s", arg.value.s    ); break;
+                                    case TypeID::TypeID_data          : itr += sizeof("%.*s")-2; fprintf(logFHandle,   "%s", arg.value.data ); break;
+                                    case TypeID::TypeID_void_star     : itr += sizeof(  "%p")-2; fprintf(logFHandle,   "%p", arg.value.p    ); break;
+                                    default: fprintf(logFHandle, "!unknow"); break;
                                 }
                                 arg.type = TypeID::TypeID_init;
                                 break;
@@ -146,7 +146,7 @@ namespace Logger {
                         } else if (*itr == '\0') {
                             break;
                         }
-                        logFile << *itr;
+                        fprintf(logFHandle, "%c", *itr);
                     }
                     flush();
                     printfInfo->dirty.store(false);
@@ -154,17 +154,19 @@ namespace Logger {
             }
         public:
             ~LoggerConsumer() { close(); }
-            LoggerConsumer(LoggerCore &core):core(core), thread(&LoggerConsumer::main, this), running(true) {}
+            LoggerConsumer(LoggerCore &core):core(core), logFHandle(nullptr), thread(&LoggerConsumer::main, this), running(true) {}
             void close() { running = false; if (thread.joinable()) thread.join(); }
             bool setFilename(const std::string &logFilename) {
                 logPath = logFilename;
-                logFile.close();
-                logFile.open(logPath, std::ofstream::out);
-                return logFile.is_open();
+                if (logFHandle != nullptr) fclose(logFHandle);
+                logFHandle = fopen(logPath.c_str(), "at");
+                if (logFHandle == nullptr) {
+                    return false;
+                }
+                return true;
             }
             void flush() {
-                if (!!logFile) logFile << std::flush;
-                else           logFile.clear();
+                fflush(logFHandle);
             }
     };
     template<typename LoggerCore> class LoggerProducer {
