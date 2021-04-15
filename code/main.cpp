@@ -70,7 +70,7 @@ template<unsigned int repeat> void case1(const int idxThread, const unsigned int
     decltype(sizeof(datatype)) datatypesize = 6;
     for (unsigned int t = 1; t <= repeat; ++t) {
         for (unsigned int i = 0; i < times; ++i) {
-            nqlog_write(tnqlog1, "%p 0123456789 %d %d %d %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
+            nqlog_write(tnqlog1, "%p 0123456789 %d %u %u %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
                 , nqlog_ptr    , &i
                 , nqlog_int    , idxThread
                 , nqlog_uint   , t
@@ -82,7 +82,7 @@ template<unsigned int repeat> void case1(const int idxThread, const unsigned int
                 , nqlog_char   , static_cast<char>('$'+i%6)
                 , nqlog_end
             );
-            nqlog_write(tnqlog2, "%p 9876543210 %d %d %d %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
+            nqlog_write(tnqlog2, "%p 9876543210 %d %u %u %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
                 , nqlog_ptr    , &i
                 , nqlog_int    , idxThread
                 , nqlog_uint   , t
