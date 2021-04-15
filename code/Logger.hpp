@@ -106,7 +106,7 @@ namespace Logger {
 			void main() { while (running) consume(); consume(); }
 			void consume() {
 				// std::this_thread::yield();
-				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 				if (!logFile.is_open()) return;
 				for (PrintfInformation *printfInfo; (printfInfo = core.getAvailableSpaceForConsumer()) != nullptr; ) {
 					logFile << getTime("%H:%M:%S.", std::chrono::system_clock::now()) << " ";
