@@ -71,25 +71,34 @@ namespace Logger {
 }
 
 namespace Logger {
-    template<typename T, unsigned int poolSizeInLog2> class LoggerCore {
+    template<typename T> class LoggerCore {
         private:
-            constexpr static unsigned int poolSize = 1 << poolSizeInLog2;
-            constexpr static unsigned int poolMask = poolSize-1;
+            const unsigned int poolSize;
+            const unsigned int poolMask;
             char (*memPool)[sizeof(T)];
             std::atomic_uint idxProducer;
             unsigned int idxConsumer;
         public:
-            ~LoggerCore() { delete [] memPool; }
-            LoggerCore(): memPool(reinterpret_cast<decltype(memPool)>(new T[poolSize])), idxProducer(-1), idxConsumer{0} {
-                for (auto itr = memPool, end = memPool+poolSize; itr < end; ++itr)
-                    reinterpret_cast<PrintfInformation*>(itr)->dirty.store(false, std::memory_order_relaxed);
+            ~LoggerCore() { if (memPool != nullptr) delete [] memPool; }
+            LoggerCore(const unsigned int poolSizeInLog2): poolSize(1 << poolSizeInLog2), poolMask(poolSize-1), memPool(nullptr), idxProducer(-1), idxConsumer{0} {
+                try {
+                    memPool = reinterpret_cast<decltype(memPool)>(new T[poolSize]);
+                } catch (...) {
+                    memPool = nullptr;
+                }
+                if (memPool != nullptr) {
+                    for (auto itr = memPool, end = memPool+poolSize; itr < end; ++itr)
+                        reinterpret_cast<PrintfInformation*>(itr)->dirty.store(false, std::memory_order_relaxed);
+                }
             }
             T* getAvailableSpaceForProducer() {
+                if (memPool == nullptr) return nullptr;
                 PrintfInformation *printfInfo = reinterpret_cast<PrintfInformation*>(memPool[++idxProducer & poolMask]);
                 while (printfInfo->dirty.exchange(true, std::memory_order_acq_rel));
                 return printfInfo;
             }
             T* getAvailableSpaceForConsumer() {
+                if (memPool == nullptr) return nullptr;
                 if (PrintfInformation *printfInfo = reinterpret_cast<PrintfInformation*>(memPool[idxConsumer]); printfInfo->dirty.load(std::memory_order_acquire)) {
                     ++idxConsumer &= poolMask;
                     return printfInfo;
