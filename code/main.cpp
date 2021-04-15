@@ -73,8 +73,8 @@ template<unsigned int repeat> void case1(const int idxThread, const unsigned int
 			nqlog_write(tnqlog1, "%p 0123456789 %d %d %d %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
 				, nqlog_ptr    , &i
 				, nqlog_int    , idxThread
-				, nqlog_int    , t
-				, nqlog_int    , i
+				, nqlog_uint   , t
+				, nqlog_uint   , i
 				, nqlog_double , i*1.6
 				, nqlog_str    , "c-string-"
 				, nqlog_data   , datatypesize, datatype
@@ -85,8 +85,8 @@ template<unsigned int repeat> void case1(const int idxThread, const unsigned int
 			nqlog_write(tnqlog2, "%p 9876543210 %d %d %d %lf %s %.*s %f %c 012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789\n"
 				, nqlog_ptr    , &i
 				, nqlog_int    , idxThread
-				, nqlog_int    , t
-				, nqlog_int    , i
+				, nqlog_uint   , t
+				, nqlog_uint   , i
 				, nqlog_double , i*1.6
 				, nqlog_str    , "c-string-"
 				, nqlog_data   , datatypesize, datatype
