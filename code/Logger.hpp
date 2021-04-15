@@ -129,17 +129,17 @@ namespace Logger {
                             for (auto &arg: printfInfo->args) {
                                 switch (arg.type) {
                                     case TypeID::TypeID_init: continue;
-                                    case TypeID::TypeID_char          : itr += sizeof(  "%c")-2; fprintf(logFHandle,   "%c", arg.value.c    ); break;
-                                    case TypeID::TypeID_unsigned_char : itr += sizeof("%02x")-2; fprintf(logFHandle, "%02x", arg.value.uc   ); break;
-                                    case TypeID::TypeID_int           : itr += sizeof(  "%d")-2; fprintf(logFHandle,   "%d", arg.value.i    ); break;
-                                    case TypeID::TypeID_unsigned_int  : itr += sizeof(  "%u")-2; fprintf(logFHandle,   "%u", arg.value.ui   ); break;
-                                    case TypeID::TypeID_long          : itr += sizeof( "%ld")-2; fprintf(logFHandle,  "%ld", arg.value.l    ); break;
-                                    case TypeID::TypeID_unsigned_long : itr += sizeof( "%lu")-2; fprintf(logFHandle,  "%lu", arg.value.ul   ); break;
-                                    case TypeID::TypeID_float         : itr += sizeof(  "%f")-2; fprintf(logFHandle,   "%f", arg.value.f    ); break;
-                                    case TypeID::TypeID_double        : itr += sizeof( "%lf")-2; fprintf(logFHandle,  "%lf", arg.value.d    ); break;
-                                    case TypeID::TypeID_char_star     : itr += sizeof(  "%s")-2; fprintf(logFHandle,   "%s", arg.value.s    ); break;
-                                    case TypeID::TypeID_data          : itr += sizeof("%.*s")-2; fprintf(logFHandle,   "%s", arg.value.data ); break;
-                                    case TypeID::TypeID_void_star     : itr += sizeof(  "%p")-2; fprintf(logFHandle,   "%p", arg.value.p    ); break;
+                                    case TypeID::TypeID_char          : itr += sizeof(  "%c")-2; if (*itr=='c') fprintf(logFHandle,   "%c", arg.value.c    ); else {fprintf(logFHandle, "!consume: type(char"          ")%c\n",*itr); arg.type = TypeID::TypeID_init; goto nextlog;} break;
+                                    case TypeID::TypeID_unsigned_char : itr += sizeof("%02x")-2; if (*itr=='x') fprintf(logFHandle, "%02x", arg.value.uc   ); else {fprintf(logFHandle, "!consume: type(unsigned char" ")%c\n",*itr); arg.type = TypeID::TypeID_init; goto nextlog;} break;
+                                    case TypeID::TypeID_int           : itr += sizeof(  "%d")-2; if (*itr=='d') fprintf(logFHandle,   "%d", arg.value.i    ); else {fprintf(logFHandle, "!consume: type(int"           ")%c\n",*itr); arg.type = TypeID::TypeID_init; goto nextlog;} break;
+                                    case TypeID::TypeID_unsigned_int  : itr += sizeof(  "%u")-2; if (*itr=='u') fprintf(logFHandle,   "%u", arg.value.ui   ); else {fprintf(logFHandle, "!consume: type(unsigned int"  ")%c\n",*itr); arg.type = TypeID::TypeID_init; goto nextlog;} break;
+                                    case TypeID::TypeID_long          : itr += sizeof( "%ld")-2; if (*itr=='d') fprintf(logFHandle,  "%ld", arg.value.l    ); else {fprintf(logFHandle, "!consume: type(long"          ")%c\n",*itr); arg.type = TypeID::TypeID_init; goto nextlog;} break;
+                                    case TypeID::TypeID_unsigned_long : itr += sizeof( "%lu")-2; if (*itr=='u') fprintf(logFHandle,  "%lu", arg.value.ul   ); else {fprintf(logFHandle, "!consume: type(unsigned long" ")%c\n",*itr); arg.type = TypeID::TypeID_init; goto nextlog;} break;
+                                    case TypeID::TypeID_float         : itr += sizeof(  "%f")-2; if (*itr=='f') fprintf(logFHandle,   "%f", arg.value.f    ); else {fprintf(logFHandle, "!consume: type(float"         ")%c\n",*itr); arg.type = TypeID::TypeID_init; goto nextlog;} break;
+                                    case TypeID::TypeID_double        : itr += sizeof( "%lf")-2; if (*itr=='f') fprintf(logFHandle,  "%lf", arg.value.d    ); else {fprintf(logFHandle, "!consume: type(double"        ")%c\n",*itr); arg.type = TypeID::TypeID_init; goto nextlog;} break;
+                                    case TypeID::TypeID_char_star     : itr += sizeof(  "%s")-2; if (*itr=='s') fprintf(logFHandle,   "%s", arg.value.s    ); else {fprintf(logFHandle, "!consume: type(char*"         ")%c\n",*itr); arg.type = TypeID::TypeID_init; goto nextlog;} break;
+                                    case TypeID::TypeID_data          : itr += sizeof("%.*s")-2; if (*itr=='s') fprintf(logFHandle,   "%s", arg.value.data ); else {fprintf(logFHandle, "!consume: type(data"          ")%c\n",*itr); arg.type = TypeID::TypeID_init; goto nextlog;} break;
+                                    case TypeID::TypeID_void_star     : itr += sizeof(  "%p")-2; if (*itr=='p') fprintf(logFHandle,   "%p", arg.value.p    ); else {fprintf(logFHandle, "!consume: type(void*"         ")%c\n",*itr); arg.type = TypeID::TypeID_init; goto nextlog;} break;
                                     default: fprintf(logFHandle, "!unknow"); break;
                                 }
                                 arg.type = TypeID::TypeID_init;
@@ -151,6 +151,7 @@ namespace Logger {
                         }
                         fprintf(logFHandle, "%c", *itr);
                     }
+                    nextlog:
                     flush();
                     printfInfo->dirty.store(false);
                 }
