@@ -112,13 +112,13 @@ int main(int argc, char **argv) {
     nqlog_open(tnqlog1, (char *) "ftt_nqlog" /* nqlog_id */,
                     tnplog1,
                     nplog_write_log_func,
-                    nplog_flush_func, 17 ,
-                    50); /* preAllocLogMsgNodeCount */
+                    nplog_flush_func, 30 ,
+                    17); /* preAllocLogMsgNodeCount */
     nqlog_open(tnqlog2, (char *) "ftt_nqlog" /* nqlog_id */,
                     tnplog2,
                     nplog_write_log_func,
-                    nplog_flush_func, 17 ,
-                    50); /* preAllocLogMsgNodeCount */
+                    nplog_flush_func, 30 ,
+                    17); /* preAllocLogMsgNodeCount */
     struct timespec time[3];
     timespec_get(&time[0], TIME_UTC);
     std::thread threads[4];

@@ -69,7 +69,7 @@ namespace compatibility_nplog_nqlog {
     struct nqlog_t {
         Logger::LoggerCore<Logger::PrintfInformation> core;
         Logger::LoggerConsumer<decltype(core)> logger;
-        nqlog_t(const unsigned int poolSizeInLog2): core(poolSizeInLog2), logger(core) {}
+        nqlog_t(const unsigned int poolSizeInLog2, const int autoFlushTimeInt): core(poolSizeInLog2), logger(core, autoFlushTimeInt) {}
     };
     using write_log_func = void (*)(void *phlog, const char *msgFmt, ...);
     using flush_func = void (*)(void *phlog);
@@ -85,9 +85,9 @@ namespace compatibility_nplog_nqlog {
             nqlog = nullptr;
         }
     }
-    inline int nqlog_open(nqlog_t *&nqlog, char *, void *nplog, write_log_func, flush_func, int poolSizeInLog2, int) {
+    inline int nqlog_open(nqlog_t *&nqlog, char *, void *nplog, write_log_func, flush_func, int autoFlushTimeInt, int poolSizeInLog2) {
         nqlog_close(nqlog, 0);
-        nqlog = new nqlog_t(poolSizeInLog2);
+        nqlog = new nqlog_t(poolSizeInLog2, autoFlushTimeInt);
         assert(nqlog != nullptr);
         assert(nplog != nullptr);
         return nqlog->logger.setFilename(static_cast<nplog_t*>(nplog)->logFilename)? 0: -1;

@@ -7,6 +7,7 @@
 #include <cstdio>  // FILE fopen fclose fprint fflush
 #include <iomanip>  // stringstream put_time setfill
 #include <iostream>  // std::cerr
+#include <sys/time.h>  // gettimeofday
 #include <thread>
 
 namespace Logger {
@@ -113,6 +114,8 @@ namespace Logger {
             FILE *logFHandle;
             std::thread thread;
             std::atomic_bool running;
+            int autoFlushTimeInt;
+            std::chrono::high_resolution_clock::time_point lastFlushTime;
         protected:
             void main() { while (running) consume(); consume(); }
             void consume() {
@@ -151,10 +154,11 @@ namespace Logger {
                     flush();
                     printfInfo->dirty.store(false);
                 }
+                flush();
             }
         public:
             ~LoggerConsumer() { close(); }
-            LoggerConsumer(LoggerCore &core):core(core), logFHandle(nullptr), thread(&LoggerConsumer::main, this), running(true) {}
+            LoggerConsumer(LoggerCore &core, const int autoFlushTimeInt):core(core), logFHandle(nullptr), thread(&LoggerConsumer::main, this), running(true), autoFlushTimeInt(autoFlushTimeInt), lastFlushTime(std::chrono::high_resolution_clock::now()) {}
             void close() { running = false; if (thread.joinable()) thread.join(); }
             bool setFilename(const std::string &logFilename) {
                 logPath = logFilename;
@@ -166,7 +170,12 @@ namespace Logger {
                 return true;
             }
             void flush() {
-                fflush(logFHandle);
+                const auto current = std::chrono::high_resolution_clock::now();
+                const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(current - lastFlushTime).count();
+                if (ms >= autoFlushTimeInt) {
+                    fflush(logFHandle);
+                    lastFlushTime = current;
+                }
             }
     };
     template<typename LoggerCore> class LoggerProducer {
