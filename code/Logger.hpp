@@ -75,12 +75,14 @@ namespace Logger {
         private:
             constexpr static unsigned int poolSize = 1 << poolSizeInLog2;
             constexpr static unsigned int poolMask = poolSize-1;
-            char memPool[poolSize][sizeof(T)];
+            char (*memPool)[sizeof(T)];
             std::atomic_uint idxProducer;
             unsigned int idxConsumer;
         public:
-            LoggerCore(): idxProducer(-1), idxConsumer{0} {
-                for (auto memoryData: memPool) reinterpret_cast<PrintfInformation*>(memoryData)->dirty.store(false, std::memory_order_relaxed);
+            ~LoggerCore() { delete [] memPool; }
+            LoggerCore(): memPool(reinterpret_cast<decltype(memPool)>(new T[poolSize])), idxProducer(-1), idxConsumer{0} {
+                for (auto itr = memPool, end = memPool+poolSize; itr < end; ++itr)
+                    reinterpret_cast<PrintfInformation*>(itr)->dirty.store(false, std::memory_order_relaxed);
             }
             T* getAvailableSpaceForProducer() {
                 PrintfInformation *printfInfo = reinterpret_cast<PrintfInformation*>(memPool[++idxProducer & poolMask]);
