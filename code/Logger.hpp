@@ -94,7 +94,7 @@ namespace Logger {
             T* getAvailableSpaceForProducer() {
                 if (memPool == nullptr) return nullptr;
                 PrintfInformation *printfInfo = reinterpret_cast<PrintfInformation*>(memPool[++idxProducer & poolMask]);
-                while (printfInfo->dirty.exchange(true, std::memory_order_acq_rel));
+                if (printfInfo->dirty.exchange(true, std::memory_order_acq_rel)) return nullptr;
                 return printfInfo;
             }
             T* getAvailableSpaceForConsumer() {
@@ -175,6 +175,7 @@ namespace Logger {
                 printfInfo = core.getAvailableSpaceForProducer();
             }
             template<typename...Targs> inline void operator()(const char *format, Targs&&... args) {
+                if (printfInfo == nullptr) return;
                 strcpy(printfInfo->formatting, format);
                 processParameters(std::forward<Targs>(args)...);
             }
