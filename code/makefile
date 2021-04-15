@@ -26,7 +26,7 @@ clean:
 	rm -rf $(objdir)/$(obj) $(exe)
 
 go:
-	$(exe) 100 a b
+	ulimit -c unlimited && $(exe) 100 a b
 
 install:$(exe)
 	scp $(exe) tradetron@omstest:/home/tradetron/libs/libsrc/ut/go.new
