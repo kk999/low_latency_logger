@@ -93,7 +93,7 @@ namespace compatibility_nplog_nqlog {
         return nqlog->logger.setFilename(static_cast<nplog_t*>(nplog)->logFilename)? 0: -1;
     }
     template<typename...Targs> inline void nqlog_write(nqlog_t *nqlog, Targs...args) {
-        (Logger::LoggerProducer<decltype(nqlog_t::core)>(nqlog->core))(args...);
+        Logger::LoggerProducer(nqlog->core)(args...);
     }
 }
 

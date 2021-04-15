@@ -234,6 +234,7 @@ namespace Logger {
                 processParameters<idxArgument+1>(std::forward<Targs>(args)...);
             }
     };
+    template<typename LoggerCore> LoggerProducer(LoggerCore &core) -> LoggerProducer<LoggerCore>;
 }
 
 #endif
